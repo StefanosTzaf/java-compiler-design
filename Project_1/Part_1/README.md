@@ -96,3 +96,8 @@ So the final grammar is:
     str2 -> str | ε
     char -> a-z | A-Z
 ```
+
+## Explanation of the code
+In the beggining I implemented a parser that just checks if the input string is valid according to the grammar,
+and returns True or False. Then I implemented the evaluation of the expressions. Every non terminal has a function
+and returns ```String``` instead of ```Boolean```.  

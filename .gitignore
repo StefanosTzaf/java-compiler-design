@@ -5,6 +5,10 @@
 !*.java
 !.gitignore
 !README.md
+!*.jar
+!*.cup
+!*.flex
+!Makefile
 
 grammar_example/
 java-tutorial/

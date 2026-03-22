@@ -1,0 +1,8 @@
+import java_cup.runtime.*;
+
+terminal IF, ELSE, PREFIX, SUFFIX;
+terminal PLUS, LPAR, RPAR, LBRACE, RBRACE, COMMA;
+terminal String IDENTIFIER, STRING_LITERAL;
+
+non terminal dummy;
+dummy ::= ;
