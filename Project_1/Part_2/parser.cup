@@ -1,8 +1,21 @@
 import java_cup.runtime.*;
 
+/* connect this parser to a scanner */
+parser code {:
+    // Connect this parser to a scanner!
+    Scanner s;
+    Parser(Scanner s){ this.s=s; }
+:}
+
+scan with {: return s.next_token(); :};
+
+
+/* Terminals (tokens from the scanner) */
 terminal IF, ELSE, PREFIX, SUFFIX;
 terminal PLUS, LPAR, RPAR, LBRACE, RBRACE, COMMA;
 terminal String IDENTIFIER, STRING_LITERAL;
 
-non terminal dummy;
-dummy ::= ;
+/* non-terminals */
+
+
+/* Grammar rules */
