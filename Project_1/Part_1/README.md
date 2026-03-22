@@ -84,3 +84,15 @@ And now the FIRST+ sets of the two rules of str are:
     FIRST+(str -> str) = FIRST(char) = {a-z, A-Z}
     FIRST+(str2 -> ε) = {FOLLOW(str2)} = {FOLLOW(str)} = {FOLLOW(factor)} = {FIRST(term2)} = {**, FOLLOW(term)} = {**, /, FOLLOW(exp)} = {**, /, ), $}
 ```
+
+So the final grammar is:
+```
+    exp -> term exp2
+    exp2 -> / exp | ε
+    term -> factor term2
+    term2 -> ** factor term2 | ε
+    factor -> (exp) | str
+    str -> char str2
+    str2 -> str | ε
+    char -> a-z | A-Z
+```
