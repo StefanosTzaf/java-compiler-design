@@ -25,8 +25,22 @@ class StringExpEvaluator{
         return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
     }
 
-    public boolean eval() throws IOException, ParseError{
-        boolean value = exp();
+    private String operatorStars(String a, String b){
+        return a + b + b;
+    }
+
+    private String operatorDivision(String a, String b){
+        // if b is not a suffix of a, return a
+        if(! a.endsWith(b)){
+            return a;
+        }
+        else{
+            return a.substring(0, a.length() - b.length());
+        }
+    }
+
+    public String eval() throws IOException, ParseError{
+        String value = exp();
 
         if(lookahead != -1 && lookahead != '\n'){
             throw new ParseError();
@@ -35,32 +49,37 @@ class StringExpEvaluator{
         return value;
     }
 
-    private boolean exp() throws IOException, ParseError{
+    private String exp() throws IOException, ParseError{
         if(lookahead == '(' || isLetter(lookahead)){
-            return term() && exp2();
+            String termResult = term();
+            // exp2 needs the left operand for the division operator
+            // if no division operator is detected, it will just return the term result
+            return exp2(termResult);
         }
         throw new ParseError();
     }
 
-    private boolean exp2() throws IOException, ParseError{
+    private String exp2(String leftOperand) throws IOException, ParseError{
         if(lookahead == '/'){
             consume(lookahead);
-            return exp();
+            return operatorDivision(leftOperand, exp());
         }
         else if(lookahead == ')' || lookahead == -1 || lookahead == '\n'){
-            return true;
+            return leftOperand;
         }
         throw new ParseError();
     }
 
-    private boolean term() throws IOException, ParseError{
+    private String term() throws IOException, ParseError{
         if(lookahead == '(' || isLetter(lookahead)){
-            return factor() && term2();
+            String factorResult = factor();
+            // same logic as exp2
+            return term2(factorResult);
         }
         throw new ParseError();
     }
 
-    private boolean term2() throws IOException, ParseError{
+    private String term2(String leftOperand) throws IOException, ParseError{
         if(lookahead == '*'){
             consume(lookahead);
             if(lookahead != '*'){
@@ -68,56 +87,61 @@ class StringExpEvaluator{
             }
             consume(lookahead);
             // ** detected
-            return factor() && term2();
+            String result = operatorStars(leftOperand, factor());
+            return term2(result);
         }
         else if(lookahead == '/' || lookahead == ')' || lookahead == -1 || lookahead == '\n'){
-            return true;
+            return leftOperand;
         }
         throw new ParseError();
     }
 
-    private boolean factor() throws IOException, ParseError{
+    private String factor() throws IOException, ParseError{
         if(isLetter(lookahead)){
             return str();
         }
         else if(lookahead == '('){
             consume(lookahead);
-            boolean result = exp();
+            String result = exp();
             if(lookahead != ')'){
                 throw new ParseError();
             }
             consume(lookahead);
+            // do not return the parentheses, the priority has been given
             return result;
         }
         throw new ParseError();
     }
 
-    private boolean str() throws IOException, ParseError{
+    private String str() throws IOException, ParseError{
         if(isLetter(lookahead)){
-            return myChar() && str2();
+            return myChar() + str2();
         }
         throw new ParseError();
     }
 
-    private boolean str2() throws IOException, ParseError{
+    private String str2() throws IOException, ParseError{
         if(isLetter(lookahead)){
             return str();
         }
         else if(lookahead == '/' || lookahead == ')' || lookahead == -1 || lookahead == '\n'){
-            return true;
+            return "";
         }
         // do not consume or check for double asterisk here, as it is handled in term2()
         // just check if the input of the Letters stop here or not
         else if (lookahead == '*'){
-            return true;
+            return "";
         }
         throw new ParseError();
     }
 
-    private boolean myChar() throws IOException, ParseError{
+    private String myChar() throws IOException, ParseError{
         if(isLetter(lookahead)){
+            // could not cast to String directly because is an Object
+            char ch = (char) lookahead;
             consume(lookahead);
-            return true;
+            // return the character as a string
+            return String.valueOf(ch);
         }
         throw new ParseError();
     }
