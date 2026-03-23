@@ -2,7 +2,6 @@ import java_cup.runtime.*;
 
 /* connect this parser to a scanner */
 parser code {:
-    // Connect this parser to a scanner!
     Scanner s;
     Parser(Scanner s){ this.s=s; }
 :}
@@ -17,5 +16,66 @@ terminal String IDENTIFIER, STRING_LITERAL;
 
 /* non-terminals */
 
+non terminal String program;
+
+non terminal String dec_list, declaration, parameters;
+non terminal String func_expr, func_args, func_cond;
+
+non terminal String calls, main_expr, main_args, main_cond;
+
+precedence left PLUS;
 
 /* Grammar rules */
+
+
+program     ::= dec_list:f calls:c
+            
+            {:  String code = "public class Main{\n" + "    public static void main(String[] args){\n"
+                 + c +"}\n\n" + f + "}\n"; System.out.println(code); :};
+           
+
+dec_list    ::= declaration:d dec_list:d2 {: RESULT = d + d2; :}
+              | {: RESULT = ""; :};            
+
+
+declaration ::= IDENTIFIER:id LPAR parameters:p RPAR LBRACE func_expr:e RBRACE
+            {:  RESULT = "    public static String " + id + "(" + p + ") {\n" +
+                "        return " + e + ";\n" + "}\n\n"; :};
+
+parameters ::= IDENTIFIER:id COMMA parameters:p {: RESULT = "String " + id + ", " + p; :}
+             | IDENTIFIER:id {: RESULT = "String " + id; :}
+             | {: RESULT = ""; :} ;
+
+
+func_expr  ::= STRING_LITERAL:s {: RESULT = "\"" + s + "\""; :}
+             | IDENTIFIER:id    {: RESULT = id; :}
+             | func_expr:e1 PLUS func_expr:e2 {: RESULT = e1 + " + " + e2; :}
+             | IDENTIFIER:id LPAR func_args:args RPAR {: RESULT = id + "(" + args + ")"; :}
+             | IF LPAR func_cond:c RPAR func_expr:e1 ELSE func_expr:e2
+               {: RESULT = "( " + c + " ? " + e1 + " : " + e2 + " )"; :} ;
+            
+
+func_args   ::= func_expr:e COMMA func_args:args {: RESULT = e + ", " + args; :}
+              | func_expr:e   {: RESULT = e; :}
+              | {: RESULT = ""; :} ;
+
+
+func_cond    ::= func_expr:e1 PREFIX func_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
+               | func_expr:e1 SUFFIX func_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
+
+
+calls        ::= main_expr:e calls:c {: RESULT = "        System.out.println(" + e + ");\n" + c; :}
+               | main_expr:e {: RESULT = "        System.out.println(" + e + ");\n"; :} ;
+               
+main_expr    ::= main_expr:e1 PLUS main_expr:e2 {: RESULT = e1 + " + " + e2; :}
+               | IDENTIFIER:id LPAR main_args:args RPAR {: RESULT = id + "(" + args + ")"; :}
+               | IF LPAR main_cond:c RPAR main_expr:e1 ELSE main_expr:e2 
+               {: RESULT = "( " + c + " ? " + e1 + " : " + e2 + " )"; :}
+               | STRING_LITERAL:str {: RESULT = "\"" + str + "\""; :} ;
+
+main_args    ::= main_expr:e COMMA main_args:args {: RESULT = e + ", " + args; :}
+               | main_expr:e {: RESULT = e; :}
+               | {: RESULT = ""; :} ;
+
+main_cond    ::= main_expr:e1 PREFIX main_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
+               | main_expr:e1 SUFFIX main_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
