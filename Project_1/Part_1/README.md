@@ -1,7 +1,7 @@
 # String Expression Evaluator
 
 ## Explanation of the way of thinking
-The first problem I tried to solve was how to impplement the precedence of the operators. Initially,
+The first problem I tried to solve was how to implement the precedence of the operators. Initially,
 I converted the grammar like this:
 ```
     exp -> exp / term | term
@@ -9,7 +9,7 @@ I converted the grammar like this:
     ...
 ```
 however, I realized that this grammar is ambiguous, like the example from the slides, and it can 
-resault in many different leftmost derivations. For example, the string ```a**b**c``` can be derived in two different ways:
+result in many different leftmost derivations. For example, the string ```a**b**c``` can be derived in two different ways:
 ```
     exp -> term -> term ** term -> str ** term -> a ** term -> a ** term ** term -> a ** b ** c
     exp -> term -> term ** term -> term ** term ** term -> str ** term ** term -> a ** b ** c
@@ -85,16 +85,21 @@ And now the FIRST+ sets of the two rules of str are:
     FIRST+(str2 -> ε) = {FOLLOW(str2)} = {FOLLOW(str)} = {FOLLOW(factor)} = {FIRST(term2)} = {**, FOLLOW(term)} = {**, /, FOLLOW(exp)} = {**, /, ), $}
 ```
 
-So the final grammar is:
+So the final grammar is (the left associativity of ** operator has been lost, but it will be checked in the evaluation phase):
 ```
-    exp -> term exp2
-    exp2 -> / exp | ε
-    term -> factor term2
-    term2 -> ** factor term2 | ε
-    factor -> (exp) | str
-    str -> char str2
-    str2 -> str | ε
-    char -> a-z | A-Z
+#1    exp -> term exp2
+#2    exp2 -> / exp 
+#3          | ε
+#4    term -> factor term2
+#5    term2 -> ** factor term2 
+#6           | ε
+#7    factor -> (exp) 
+#8            | str
+#9    str -> char str2
+#10   str2 -> str 
+#11          | ε
+#12    char -> a-z 
+#13          | A-Z
 ```
 
 ## Explanation of the code
