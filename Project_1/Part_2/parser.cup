@@ -25,7 +25,7 @@ non terminal String declaration, parameters;
 non terminal String func_expr, func_args, func_cond;
 non terminal String main_expr, main_args, main_cond;
 
-
+precedence left IF, ELSE;
 precedence left PLUS;
 
 /* Grammar rules */

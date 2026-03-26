@@ -8,8 +8,11 @@
 !*.jar
 !*.cup
 !*.flex
+!*.sh
 !Makefile
+!/Project_1/Part_2/examples/**
 
 grammar_example/
 java-tutorial/
 jflex-cup/
+Project_1/Part_2/results/**
