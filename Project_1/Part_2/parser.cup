@@ -18,64 +18,71 @@ terminal String IDENTIFIER, STRING_LITERAL;
 
 non terminal String program;
 
-non terminal String dec_list, declaration, parameters;
+// using array to separate declarations and calls, so we can easily put them in the right
+// place in the final code (check readme for more details) 
+non terminal String[] item_list, item; 
+non terminal String declaration, parameters;
 non terminal String func_expr, func_args, func_cond;
+non terminal String main_expr, main_args, main_cond;
 
-non terminal String calls, main_expr, main_args, main_cond;
 
 precedence left PLUS;
 
 /* Grammar rules */
 
-
-program     ::= dec_list:f calls:c
-            
+program     ::= item_list:l
             {:  String code = "public class Main{\n" + "    public static void main(String[] args){\n"
-                 + c +"}\n\n" + f + "}\n"; System.out.println(code); :};
-           
+                + l[1] + "    }\n\n" + l[0] + "}\n"; System.out.println(code); :};
 
-dec_list    ::= declaration:d dec_list:d2 {: RESULT = d + d2; :}
-              | {: RESULT = ""; :};            
+
+// common list so as not to have conflicts
+item_list   ::= item:i item_list:il {: RESULT = new String[]{ i[0] + il[0], i[1] + il[1] }; :}
+              | item:i {: RESULT = i; :};
+
+
+// declaration elements will go to the first part of the array and calls will go to the second part
+// print the calls in the beggining
+item        ::= declaration:d {: RESULT = new String[]{ d, "" }; :}
+              | main_expr:e {: RESULT = new String[]{ "", "        System.out.println(" + e + ");\n" }; :};
 
 
 declaration ::= IDENTIFIER:id LPAR parameters:p RPAR LBRACE func_expr:e RBRACE
             {:  RESULT = "    public static String " + id + "(" + p + ") {\n" +
-                "        return " + e + ";\n" + "}\n\n"; :};
+                "        return " + e + ";\n" + "}\n\n"; :}
+              | IDENTIFIER:id LPAR RPAR LBRACE func_expr:e RBRACE
+            {:  RESULT = "    public static String " + id + "() {\n" +
+                "        return " + e + ";\n" + "    }\n\n"; :};
 
 parameters ::= IDENTIFIER:id COMMA parameters:p {: RESULT = "String " + id + ", " + p; :}
-             | IDENTIFIER:id {: RESULT = "String " + id; :}
-             | {: RESULT = ""; :} ;
+             | IDENTIFIER:id {: RESULT = "String " + id; :} ;
 
 
 func_expr  ::= STRING_LITERAL:s {: RESULT = "\"" + s + "\""; :}
              | IDENTIFIER:id    {: RESULT = id; :}
              | func_expr:e1 PLUS func_expr:e2 {: RESULT = e1 + " + " + e2; :}
              | IDENTIFIER:id LPAR func_args:args RPAR {: RESULT = id + "(" + args + ")"; :}
+             | IDENTIFIER:id LPAR RPAR {: RESULT = id + "()"; :}
              | IF LPAR func_cond:c RPAR func_expr:e1 ELSE func_expr:e2
                {: RESULT = "( " + c + " ? " + e1 + " : " + e2 + " )"; :} ;
             
 
 func_args   ::= func_expr:e COMMA func_args:args {: RESULT = e + ", " + args; :}
-              | func_expr:e   {: RESULT = e; :}
-              | {: RESULT = ""; :} ;
+              | func_expr:e   {: RESULT = e; :} ;
 
 
 func_cond    ::= func_expr:e1 PREFIX func_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
                | func_expr:e1 SUFFIX func_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
 
 
-calls        ::= main_expr:e calls:c {: RESULT = "        System.out.println(" + e + ");\n" + c; :}
-               | main_expr:e {: RESULT = "        System.out.println(" + e + ");\n"; :} ;
-               
 main_expr    ::= main_expr:e1 PLUS main_expr:e2 {: RESULT = e1 + " + " + e2; :}
                | IDENTIFIER:id LPAR main_args:args RPAR {: RESULT = id + "(" + args + ")"; :}
+               | IDENTIFIER:id LPAR RPAR {: RESULT = id + "()"; :}
                | IF LPAR main_cond:c RPAR main_expr:e1 ELSE main_expr:e2 
                {: RESULT = "( " + c + " ? " + e1 + " : " + e2 + " )"; :}
                | STRING_LITERAL:str {: RESULT = "\"" + str + "\""; :} ;
 
 main_args    ::= main_expr:e COMMA main_args:args {: RESULT = e + ", " + args; :}
-               | main_expr:e {: RESULT = e; :}
-               | {: RESULT = ""; :} ;
+               | main_expr:e {: RESULT = e; :} ;
 
 main_cond    ::= main_expr:e1 PREFIX main_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
                | main_expr:e1 SUFFIX main_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
