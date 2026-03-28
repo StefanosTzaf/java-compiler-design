@@ -78,4 +78,4 @@ Identifier     = [a-zA-Z_][a-zA-Z0-9_]*
 }
 
 /* error handling*/
-[^]                     { throw new Error("Illegal character <"+yytext()+">"); }
+[^]                     { throw new Error("Illegal character <" + yytext() + "> at line " + (yyline + 1) + ", column " + (yycolumn + 1)); }

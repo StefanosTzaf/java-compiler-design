@@ -36,7 +36,9 @@ program     ::= item_list:l
 
 
 // common list so as not to have conflicts
-item_list   ::= item:i item_list:il {: RESULT = new String[]{ i[0] + il[0], i[1] + il[1] }; :}
+item_list   ::= item:i item_list:il {: if (!i[1].equals("") && !il[0].equals("")) {
+                                       throw new RuntimeException("Syntax Error: Function declarations must precede all statements.");}
+                                    RESULT = new String[]{ i[0] + il[0], i[1] + il[1] }; :}
               | item:i {: RESULT = i; :};
 
 
@@ -48,7 +50,7 @@ item        ::= declaration:d {: RESULT = new String[]{ d, "" }; :}
 
 declaration ::= IDENTIFIER:id LPAR parameters:p RPAR LBRACE func_expr:e RBRACE
             {:  RESULT = "    public static String " + id + "(" + p + ") {\n" +
-                "        return " + e + ";\n" + "}\n\n"; :}
+                "        return " + e + ";\n" + "    }\n\n"; :}
               | IDENTIFIER:id LPAR RPAR LBRACE func_expr:e RBRACE
             {:  RESULT = "    public static String " + id + "() {\n" +
                 "        return " + e + ";\n" + "    }\n\n"; :};
@@ -70,8 +72,8 @@ func_args   ::= func_expr:e COMMA func_args:args {: RESULT = e + ", " + args; :}
               | func_expr:e   {: RESULT = e; :} ;
 
 
-func_cond    ::= func_expr:e1 PREFIX func_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
-               | func_expr:e1 SUFFIX func_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
+func_cond    ::= func_expr:e1 PREFIX func_expr:e2 {: RESULT = "(" + e2 + ")" + ".startsWith(" + e1 + ")"; :}
+               | func_expr:e1 SUFFIX func_expr:e2 {: RESULT = "(" + e2 + ")" + ".endsWith(" + e1 + ")"; :} ;
 
 
 main_expr    ::= main_expr:e1 PLUS main_expr:e2 {: RESULT = e1 + " + " + e2; :}
@@ -84,5 +86,5 @@ main_expr    ::= main_expr:e1 PLUS main_expr:e2 {: RESULT = e1 + " + " + e2; :}
 main_args    ::= main_expr:e COMMA main_args:args {: RESULT = e + ", " + args; :}
                | main_expr:e {: RESULT = e; :} ;
 
-main_cond    ::= main_expr:e1 PREFIX main_expr:e2 {: RESULT = e2 + ".startsWith(" + e1 + ")"; :}
-               | main_expr:e1 SUFFIX main_expr:e2 {: RESULT = e2 + ".endsWith(" + e1 + ")"; :} ;
+main_cond    ::= main_expr:e1 PREFIX main_expr:e2 {: RESULT = "(" + e2 + ")" + ".startsWith(" + e1 + ")"; :}
+               | main_expr:e1 SUFFIX main_expr:e2 {: RESULT = "(" + e2 + ")" + ".endsWith(" + e1 + ")"; :} ;

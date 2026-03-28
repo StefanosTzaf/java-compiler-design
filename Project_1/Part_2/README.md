@@ -71,7 +71,8 @@ But in this way it will give the ability to have calls and
 declarations mixed (not all the declarations at the beggining of the program). The solution i found to this, 
 was to use an array (in cup file) with two fields, one for the declarations and one for the calls, 
 so now our Item will return an array of two fields and when we construct the final
-output we will concatanate with the right order the declarations and the calls.
+output we will concatanate with the right order the declarations and the calls. In case i have a declaration after
+a call i will check it in CUP file with a simple if.
 
 Now the conflicts moved to the Parameters :
 ```

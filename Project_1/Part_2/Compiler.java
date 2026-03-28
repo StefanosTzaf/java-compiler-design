@@ -1,13 +1,10 @@
 import java_cup.runtime.*;
 import java.io.*;
 
-// it was not named Main.java because the Main.java file will be produced by our transpiler
 public class Compiler {
     public static void main(String[] args) {
         try {
-            
             Reader inputReader;
-            // if an argument is provided, read from the file, otherwise read from standard input
             if (args.length > 0) {
                 inputReader = new FileReader(args[0]);
             } else {
@@ -15,7 +12,15 @@ public class Compiler {
             }
 
             Scanner scanner = new Scanner(inputReader);
-            Parser parser = new Parser(scanner);
+            Parser parser = new Parser(scanner) {
+                
+                @Override
+                public void syntax_error(Symbol cur_token) {
+                    int line = cur_token.left + 1;
+                    System.err.println("Syntax error at line " + line +  ": unexpected token '");
+                }
+            };
+
             parser.parse();
 
         } 
