@@ -37,7 +37,7 @@ program     ::= item_list:l
 
 // common list so as not to have conflicts
 item_list   ::= item:i item_list:il {: if (!i[1].equals("") && !il[0].equals("")) {
-                                       throw new RuntimeException("Syntax Error: Function declarations must precede all statements.");}
+                                       throw new RuntimeException("Syntax Error: Function declarations must precede all calls.");}
                                     RESULT = new String[]{ i[0] + il[0], i[1] + il[1] }; :}
               | item:i {: RESULT = i; :};
 
