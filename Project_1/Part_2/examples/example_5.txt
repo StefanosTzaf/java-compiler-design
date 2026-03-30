@@ -11,3 +11,9 @@ no_called() {
 }
 
 y("a" + "b", if ( "Java" suffix x("Script")) "A" else "B")
+
+if(
+    if(if( "Java" suffix x("Script")) "J" else "X"  
+         prefix "JJJava") "YES" else "X" 
+         suffix "YYESYES") "RIGHT" else "WRONG"
+    

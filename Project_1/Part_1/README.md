@@ -1,5 +1,11 @@
-# String Expression Evaluator
+# Project 1 - Part 1
 
+## Compile and run the program with the following command:
+* Compile: `javac *.java`
+* Run: `java Main`
+* The program accepts multiple inputs, either from the command line(when you give next line, the line is evaluated and you 
+  can give another line or finish with ctrl + D) or with a file (e.g. `java Main < input.txt`)
+  
 ## Explanation of the way of thinking
 The first problem I tried to solve was how to implement the precedence of the operators. Initially,
 I converted the grammar like this:

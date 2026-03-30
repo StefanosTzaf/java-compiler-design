@@ -5,8 +5,9 @@
 * There is a Makefile to compile the project.
 * To run the project, use the command ```java -cp java-cup-11b-runtime.jar:. Compiler``` 
 * There is a Script that runs some examples of the examples folder, and you can see the results in the results folder.
-  just run the command ```./run_examples.sh``` in the terminal. In every case you can run it yourself with the command above
+  Just run the command ```./run_examples.sh``` in the terminal. In every case you can run it yourself with the command above
   and the input file you want, for example: ```java -cp java-cup-11b-runtime.jar:. Compiler < examples/example1.txt > results/example1.java```
+
 ## Grammar
 
 This was the first try to make the grammar. I ended up to separate Func_expr and Main_expr because
