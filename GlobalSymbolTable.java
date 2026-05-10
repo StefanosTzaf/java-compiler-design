@@ -14,6 +14,11 @@ class ClassSymbolTable {
         this.name = name;
         this.extendsFrom = parentName;
     }
+
+    // we save the offsets of the next fields and methods. Needed when updateing the
+    // offsets of the child classes, so as not to traverse the parent class every time we
+    // need the last offset
+    int nextFieldOffset = 0; 
 }
 
 // a more specific symbol table for the methods
@@ -44,9 +49,16 @@ public class GlobalSymbolTable {
     public void enterClass(String className, String parentName) {
         currentClass = new ClassSymbolTable(className, parentName);
         classes.put(className, currentClass);
-        // for every new class we reset the field and method counters
-        fieldCounter = 0;
         methodCounter = 0;
+        if(parentName == null){
+            // for every new class we reset the field and method counters
+            fieldCounter = 0;
+        }
+        else{
+            // if there is a parent class, we need to start counting the offsets from the end of the parent class
+            ClassSymbolTable parent = classes.get(parentName);
+            this.fieldCounter = parent.nextFieldOffset;
+        }
     }
 
     public void enterMethod(String returnType, String methodName) {
@@ -79,6 +91,8 @@ public class GlobalSymbolTable {
                 // array or any other class name
                 fieldCounter += 8;
             }
+            // update the next field offset of the current class
+            currentClass.nextFieldOffset = fieldCounter;
         }
     }
 
@@ -93,6 +107,9 @@ public class GlobalSymbolTable {
     }
 
     public void exitClass() {
+        if (currentClass != null) {
+            currentClass.nextFieldOffset = this.fieldCounter;
+        }
         currentClass = null;
     }
 }
