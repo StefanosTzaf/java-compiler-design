@@ -2,6 +2,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import syntaxtree.*;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -28,14 +29,13 @@ public class Main {
                 if (name.equals(symbolTableVisitor.mainClassName)) {
                     continue;
                 }
-                for (String fieldName : c.fields.keySet()) {
-                    int offset = c.fieldOffsets.get(fieldName);
-                    System.out.println(name + "." + fieldName + " : " + offset);
+                // iterating over the fieldOffsets Map and NOT the fields Map because
+                // the overriden methods have not been added in the methodOffsets Map(we don't want to print them)
+                for (Map.Entry<String, Integer> entry : c.fieldOffsets.entrySet()) {
+                    System.out.println(name + "." + entry.getKey() + " : " + entry.getValue());
                 }
-                
-                for (String methodName : c.methods.keySet()) {
-                    int offset = c.methodOffsets.get(methodName);
-                    System.out.println(name + "." + methodName + " : " + offset);
+                for (Map.Entry<String, Integer> entry : c.methodOffsets.entrySet()) {
+                    System.out.println(name + "." + entry.getKey() + " : " + entry.getValue());
                 }
             }
         }

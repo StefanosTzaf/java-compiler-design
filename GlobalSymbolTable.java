@@ -19,6 +19,7 @@ class ClassSymbolTable {
     // offsets of the child classes, so as not to traverse the parent class every time we
     // need the last offset
     int nextFieldOffset = 0; 
+    int nextMethodOffset = 0;
 }
 
 // a more specific symbol table for the methods
@@ -49,25 +50,24 @@ public class GlobalSymbolTable {
     public void enterClass(String className, String parentName) {
         currentClass = new ClassSymbolTable(className, parentName);
         classes.put(className, currentClass);
-        methodCounter = 0;
+        
         if(parentName == null){
             // for every new class we reset the field and method counters
             fieldCounter = 0;
+            methodCounter = 0;
         }
         else{
             // if there is a parent class, we need to start counting the offsets from the end of the parent class
             ClassSymbolTable parent = classes.get(parentName);
             this.fieldCounter = parent.nextFieldOffset;
+            this.methodCounter = parent.nextMethodOffset;
         }
     }
 
     public void enterMethod(String returnType, String methodName) {
+        // the real insertion of the method in the symbol table will be done
+        // in the exit function because we need to know the parametres for overloading
         currentMethod = new MethodSymbolTable(returnType, methodName);
-        currentClass.methods.put(methodName, currentMethod);
-
-        // 8 bytes for the methods (pointer)
-        currentClass.methodOffsets.put(methodName, methodCounter);
-        methodCounter += 8;
     }
 
     public void insert(String name, String type) {
@@ -103,13 +103,54 @@ public class GlobalSymbolTable {
     }
     
     public void exitMethod() {
+        // we make a name this way so as to be distinguishable from other methods with the same name 
+        // but different parameters (overloading)
+        String nameWithParameters = currentMethod.name;
+        for (String paramType : currentMethod.parameters.values()) {
+            // TODO: can we print the real name? is this a problem?
+            nameWithParameters += "_" + paramType;
+        }
+
+        Integer inheritedOffset = findMethodOffsetInHierarchy(currentClass.extendsFrom, nameWithParameters);
+        if (inheritedOffset != null) {
+            // in case of overriding do not add it in the offsets of the current class
+            // TODO: not sure about this if
+        }
+        else{
+            currentClass.methodOffsets.put(nameWithParameters, methodCounter);
+            methodCounter += 8;
+            currentClass.nextMethodOffset = methodCounter;
+        }
+
+        // save this method in the symbol table of the current class
+        currentClass.methods.put(nameWithParameters, currentMethod);
         currentMethod = null;
     }
 
     public void exitClass() {
         if (currentClass != null) {
             currentClass.nextFieldOffset = this.fieldCounter;
+            currentClass.nextMethodOffset = this.methodCounter;
         }
         currentClass = null;
+    }
+
+    private Integer findMethodOffsetInHierarchy(String parentName, String functionName) {
+        if (parentName == null) {
+            return null;
+        }
+
+        ClassSymbolTable parent = classes.get(parentName);
+        if (parent == null) {
+            return null;
+        }
+
+        // if parent contains the method, return its offset
+        if (parent.methodOffsets.containsKey(functionName)) {
+            return parent.methodOffsets.get(functionName);
+        }
+
+        // if parent does not contain the method, continue searching in the hierarchy
+        return findMethodOffsetInHierarchy(parent.extendsFrom, functionName);
     }
 }
