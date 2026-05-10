@@ -19,8 +19,25 @@ public class Main {
 
             System.err.println("Program parsed successfully.");
 
-            SymbolTableVisitor eval = new SymbolTableVisitor();
-            root.accept(eval, null);
+            SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor();
+            root.accept(symbolTableVisitor, null);
+
+            // printing the symbol table for debugging
+            for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
+                String name = c.name;
+                if (name.equals(symbolTableVisitor.mainClassName)) {
+                    continue;
+                }
+                for (String fieldName : c.fields.keySet()) {
+                    int offset = c.fieldOffsets.get(fieldName);
+                    System.out.println(name + "." + fieldName + " : " + offset);
+                }
+                
+                for (String methodName : c.methods.keySet()) {
+                    int offset = c.methodOffsets.get(methodName);
+                    System.out.println(name + "." + methodName + " : " + offset);
+                }
+            }
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());

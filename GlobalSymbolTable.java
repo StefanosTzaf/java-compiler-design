@@ -31,34 +31,63 @@ class MethodSymbolTable {
 
 // this is the main class for the symbol table, it contains a map of class names to their ClassSymbolTable
 public class GlobalSymbolTable {
-
-    Map<String, ClassSymbolTable> classes = new LinkedHashMap<>();
+    public Map<String, ClassSymbolTable> classes = new LinkedHashMap<>();
     
-    ClassSymbolTable currentClass = null;
-    MethodSymbolTable currentMethod = null;
+    public ClassSymbolTable currentClass = null;
+    public MethodSymbolTable currentMethod = null;
 
+    // so as to count the offsets of the fields and methods
+    private int fieldCounter = 0;
+    private int methodCounter = 0;
+    
     // interface of the symbol table as reffered in the slides
     public void enterClass(String className, String parentName) {
         currentClass = new ClassSymbolTable(className, parentName);
         classes.put(className, currentClass);
+        // for every new class we reset the field and method counters
+        fieldCounter = 0;
+        methodCounter = 0;
     }
 
     public void enterMethod(String returnType, String methodName) {
         currentMethod = new MethodSymbolTable(returnType, methodName);
         currentClass.methods.put(methodName, currentMethod);
+
+        // 8 bytes for the methods (pointer)
+        currentClass.methodOffsets.put(methodName, methodCounter);
+        methodCounter += 8;
     }
 
     public void insert(String name, String type) {
         // if we are now inside a method, then this is a local variable
         if (currentMethod != null) {
+            // in local variables we don't calculate offsets
             currentMethod.localVariables.put(name, type);
         }
         // if we are not inside a method but we are inside a class, then this is a field
         else if (currentClass != null) {
             currentClass.fields.put(name, type);
+            currentClass.fieldOffsets.put(name, fieldCounter);
+
+            if (type.equals("int")) {
+                fieldCounter += 4;
+            }
+            else if (type.equals("boolean")) {
+                fieldCounter += 1;
+            }
+            else {
+                // array or any other class name
+                fieldCounter += 8;
+            }
         }
     }
 
+    public void insertParameter(String name, String type) {
+        if (currentMethod != null) {
+            currentMethod.parameters.put(name, type);
+        }
+    }
+    
     public void exitMethod() {
         currentMethod = null;
     }
