@@ -23,6 +23,8 @@ public class Main {
             SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor();
             root.accept(symbolTableVisitor, null);
 
+            TypeCheckVisitor typeCheckVisitor = new TypeCheckVisitor(symbolTableVisitor.symbolTable);
+            root.accept(typeCheckVisitor, null);
             // printing the symbol table for debugging
             for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
                 String name = c.name;

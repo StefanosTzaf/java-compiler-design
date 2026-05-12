@@ -153,4 +153,32 @@ public class GlobalSymbolTable {
         // if parent does not contain the method, continue searching in the hierarchy
         return findMethodOffsetInHierarchy(parent.extendsFrom, functionName);
     }
+
+    // ----------- Helper functions -------------
+
+    public boolean isSubtype(String child, String parent) {
+        if (child.equals(parent)) {
+            return true;
+        }
+        
+        // primitive types cannot be subtypes of any other type (if they were the same type, the above if would have found it)
+        if (child.equals("int") || child.equals("boolean") || child.equals("int[]")) {
+            return false;
+        }
+
+        ClassSymbolTable currentClass = classes.get(child);
+        // check the hierarchy of the child class, if there is no extendsFrom break
+        while (currentClass != null && currentClass.extendsFrom != null) {
+            if (currentClass.extendsFrom.equals(parent)) {
+                return true;
+            }
+            currentClass = classes.get(currentClass.extendsFrom);
+        }
+        // if it was a sub type or the same type, we would have found it till here
+        return false;
+    }
+
+    public boolean containClass(String className) {
+        return classes.containsKey(className);
+    }
 }
