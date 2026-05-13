@@ -181,4 +181,52 @@ public class GlobalSymbolTable {
     public boolean containClass(String className) {
         return classes.containsKey(className);
     }
+
+    // this function is used to get the type of a variable and null if it does not exist in the symbol table
+    public String getVarType(String className, String methodName, String varName) {
+        ClassSymbolTable c = classes.get(className);
+        if (c == null){
+            return null;
+        }
+
+        // search locally in the method
+        if (methodName != null) {
+            MethodSymbolTable currentMethod = null;
+            // search for the method in the current class
+            for (MethodSymbolTable m : c.methods.values()) {
+                if (m.name.equals(methodName)) {
+                    currentMethod = m;
+                    break;
+                }
+            }
+            // if there is a method with the given name
+            if (currentMethod != null) {
+                // first search in the local variables 
+                if (currentMethod.localVariables.containsKey(varName)){
+                    return currentMethod.localVariables.get(varName);
+                }
+                // then search in the parameters
+                if (currentMethod.parameters.containsKey(varName)){
+                    return currentMethod.parameters.get(varName);
+                }
+            }
+        }
+
+        // if was not found in the method, search in the fields of the class and its parents
+        ClassSymbolTable currentClass = c;
+        while (currentClass != null) {
+            if (currentClass.fields.containsKey(varName)){
+                return currentClass.fields.get(varName);
+            }
+        
+            if (currentClass.extendsFrom != null){
+                currentClass = classes.get(currentClass.extendsFrom);
+            }
+            else{
+                currentClass = null;
+            }
+        }
+
+        return null;
+    }
 }

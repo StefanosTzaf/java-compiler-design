@@ -18,8 +18,6 @@ public class Main {
 
             Goal root = parser.Goal();
 
-            System.err.println("Program parsed successfully.");
-
             SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor();
             root.accept(symbolTableVisitor, null);
 
@@ -46,6 +44,9 @@ public class Main {
         }
         catch(FileNotFoundException ex){
             System.err.println(ex.getMessage());
+        }
+        catch(RuntimeException ex){
+            System.err.println(ex.getMessage()); 
         }
         finally{
             try{
