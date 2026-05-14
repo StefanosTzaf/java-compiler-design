@@ -229,4 +229,41 @@ public class GlobalSymbolTable {
 
         return null;
     }
+
+    // Returns the return-type of the method or null if it does not exist in the symbol table
+    public String getMethodReturnType(String className, String methodName, Vector<String> argTypes) {
+        ClassSymbolTable c = classes.get(className);
+        while (c != null) {
+            // we have to search manually every method because in the map there are overloaded classes (foo_int, foo_int_int...)
+            for (MethodSymbolTable m : c.methods.values()) {
+                if (m.name.equals(methodName)) {
+                    if (m.parameters.size() == argTypes.size()) {
+                        boolean areTheSame = true;
+                        int i = 0;
+                        // check each parameter if it is the same or a supertype
+                        for (String paramType : m.parameters.values()) {
+                            if (!isSubtype(argTypes.get(i), paramType)) {
+                                areTheSame = false;
+                                break;
+                            }
+                            i++;
+                        }
+                        if (areTheSame){
+                            return m.returnType;
+                        }
+                    }
+                }
+            }
+
+            // if it was not found AND there is a parent class, continue searching there
+            if (c.extendsFrom != null){
+               c = classes.get(c.extendsFrom);  
+            } 
+            else {
+                c = null;
+            }
+        
+        }
+        return null;
+    }
 }
