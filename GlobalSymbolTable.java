@@ -48,20 +48,30 @@ public class GlobalSymbolTable {
     
     // interface of the symbol table as reffered in the slides
     public void enterClass(String className, String parentName) {
+        if (classes.containsKey(className)) {
+            throw new RuntimeException("TYPE ERROR: Class " + className + " is already defined");
+        }
+
         currentClass = new ClassSymbolTable(className, parentName);
-        classes.put(className, currentClass);
-        
+        // if this call did not come from an extends
         if(parentName == null){
-            // for every new class we reset the field and method counters
             fieldCounter = 0;
             methodCounter = 0;
         }
         else{
             // if there is a parent class, we need to start counting the offsets from the end of the parent class
             ClassSymbolTable parent = classes.get(parentName);
+
+            // if the parent class is not defined(even if it is defined later in the file)
+            if(parent == null){
+                throw new RuntimeException("TYPE ERROR: Parent class " + parentName + " is not defined");
+            }
+
             this.fieldCounter = parent.nextFieldOffset;
             this.methodCounter = parent.nextMethodOffset;
         }
+
+        classes.put(className, currentClass);
     }
 
     public void enterMethod(String returnType, String methodName) {
@@ -74,10 +84,16 @@ public class GlobalSymbolTable {
         // if we are now inside a method, then this is a local variable
         if (currentMethod != null) {
             // in local variables we don't calculate offsets
+            if (currentMethod.localVariables.containsKey(name) || currentMethod.parameters.containsKey(name)) {
+                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name);
+            }
             currentMethod.localVariables.put(name, type);
         }
         // if we are not inside a method but we are inside a class, then this is a field
         else if (currentClass != null) {
+            if (currentClass.fields.containsKey(name)) {
+                throw new RuntimeException("TYPE ERROR: Field " + name + " is already defined in class " + currentClass.name);
+            }
             currentClass.fields.put(name, type);
             currentClass.fieldOffsets.put(name, fieldCounter);
 
@@ -98,6 +114,9 @@ public class GlobalSymbolTable {
 
     public void insertParameter(String name, String type) {
         if (currentMethod != null) {
+            if (currentMethod.parameters.containsKey(name) || currentMethod.localVariables.containsKey(name)) {
+                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name);
+            }
             currentMethod.parameters.put(name, type);
         }
     }
@@ -111,6 +130,14 @@ public class GlobalSymbolTable {
             nameWithParameters += "_" + paramType;
         }
 
+        // check this before adding the method to the symbol table because we have a map and it WON'T keep the same key two times 
+        if (currentClass.methods.containsKey(nameWithParameters)) {
+            throw new RuntimeException("TYPE ERROR: Method " + currentMethod.name + " is already defined with identical parameters in class " + currentClass.name);
+        }
+        
+        currentClass.methods.put(nameWithParameters, currentMethod);
+        checkOverrideAndOverload(currentClass.name, nameWithParameters);
+
         Integer inheritedOffset = findMethodOffsetInHierarchy(currentClass.extendsFrom, nameWithParameters);
         if (inheritedOffset != null) {
             // in case of overriding do not add it in the offsets of the current class
@@ -123,7 +150,7 @@ public class GlobalSymbolTable {
         }
 
         // save this method in the symbol table of the current class
-        currentClass.methods.put(nameWithParameters, currentMethod);
+        
         currentMethod = null;
     }
 
@@ -265,5 +292,79 @@ public class GlobalSymbolTable {
         
         }
         return null;
+    }
+
+
+    public void checkOverrideAndOverload(String className, String fullMethodName) {
+        ClassSymbolTable classToCheck = classes.get(className);
+        MethodSymbolTable methodToCheck = classToCheck.methods.get(fullMethodName);
+        String nameWithoutParameters = methodToCheck.name;
+
+        // starting from this class and going up the hierarchy
+        String currentClassName = className;
+        
+        while (currentClassName != null) {
+            ClassSymbolTable currentClass = classes.get(currentClassName);
+
+            for (MethodSymbolTable currentMethod : currentClass.methods.values()) {
+                
+                // if the name without the parameters(foo not the foo_int_int) is the same
+                if (currentMethod.name.equals(nameWithoutParameters)) {
+                    // if it exactly the same method, skip
+                    if (currentMethod == methodToCheck){
+                        continue;
+                    } 
+
+                    // different number of parameters -> overloading
+                    if (methodToCheck.parameters.size() != currentMethod.parameters.size()) {
+                        continue;
+                    }
+
+                    // same number of parameters, we have to check
+                    boolean isExactMatch = true;
+                    boolean allHaveHierarchyRelationship = true;
+
+                    // iterators to the arguments of the method we want to check and the current method in the hierarchy
+                    Iterator<String> argsOfMethodToCheck = methodToCheck.parameters.values().iterator();
+                    Iterator<String> currentArgs = currentMethod.parameters.values().iterator();
+
+                    // we have a linked hash so next will give us the arguments in the order they were inserted
+                    while (argsOfMethodToCheck.hasNext() && currentArgs.hasNext()) {
+                        String type1 = argsOfMethodToCheck.next();
+                        String type2 = currentArgs.next();
+
+                        if (!type1.equals(type2)) {
+                            isExactMatch = false;
+                        }
+
+                        // if non of them is a subtype of the other, then they do not have a hierarchy relationship
+                        if (!isSubtype(type1, type2) && !isSubtype(type2, type1)) {
+                            allHaveHierarchyRelationship = false;
+                        }
+                    }
+
+                    // after checking all the arguments, if they are an exactly the same method ->
+                    if (isExactMatch) {
+                        // exactly the same in the same class -> ERROR
+                        if (className.equals(currentClassName)) {
+                            throw new RuntimeException("TYPE ERROR: Method " + nameWithoutParameters + " is already defined with identical arguments in class " + className);
+                        } 
+                        else {
+                            // we have an override but we check the return type, if it is not the same -> ERROR
+                            if (!methodToCheck.returnType.equals(currentMethod.returnType)) {
+                                throw new RuntimeException("TYPE ERROR: Method " + nameWithoutParameters + " in class " + className + 
+                                    " must have the same return type as the method it overrides in class " + currentClassName);
+                            }
+                        }
+                    }
+                    else if (allHaveHierarchyRelationship) {
+                        // all the arguments have a hierarchy relationship
+                        throw new RuntimeException("TYPE ERROR: Ambiguous overloading for method " + nameWithoutParameters + " in class " + className + 
+                            ". All arguments have a subtype/supertype relationship with a method in class " + currentClassName);
+                    }
+                }
+            }
+            currentClassName = currentClass.extendsFrom;
+        }
     }
 }
