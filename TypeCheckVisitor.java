@@ -382,7 +382,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         if (n.f0.present()) {
             // for every expression term (because of *)
             for (int i = 0; i < n.f0.size(); i++) {
-                // Στέλνουμε το accept στο ExpressionTerm
+                // send firstly accept to ExpressionTerm
                 String type = n.f0.elementAt(i).accept(this, argu);
                 listOfTypes.add(type);
             }
