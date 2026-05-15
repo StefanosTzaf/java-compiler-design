@@ -31,19 +31,24 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
     public String visit(MainClass n, Void argu) {
         // name of the main class
         String className = n.f1.accept(this, null);
-        symbolTable.enterClass(className, null);
+        // pass the line of the class name
+        symbolTable.enterClass(className, null, n.f1.f0.beginLine);
         mainClassName = className;
 
         // main has no methods is static but we put it in the symbol table for later checks
         symbolTable.enterMethod("void", "main");
         String argName = n.f11.accept(this, null);
-        symbolTable.insertParameter(argName, "String[]");
+        // pass the line of the parameter of the main method
+        symbolTable.insertParameter(argName, "String[]", n.f11.f0.beginLine);
 
         // f14 is a list of variable declarations, we need to visit them to add them to the symbol table
         n.f14.accept(this, null);
         
-        // exit the scopes
-        symbolTable.exitMethod();
+        // pass the line of the "main" token (f6)
+        symbolTable.exitMethod(n.f6.beginLine);
+        symbolTable.currentClass.methodOffsets.clear();
+        // so as all the classes derived from the main class to have the correct offsets (found out from test73)
+        symbolTable.currentClass.nextMethodOffset = 0;
         symbolTable.exitClass();
         
         return null;
@@ -61,7 +66,7 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
     @Override
     public String visit(ClassDeclaration n, Void argu){
         String className = n.f1.accept(this, null);
-        symbolTable.enterClass(className, null);
+        symbolTable.enterClass(className, null, n.f1.f0.beginLine);
         // so as to visit the variable and method declarations
         n.f3.accept(this, null);
         n.f4.accept(this, null);
@@ -84,7 +89,7 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
         String className = n.f1.accept(this, null);
         String parentName = n.f3.accept(this, null);
         // now there is a parent-child relationship
-        symbolTable.enterClass(className, parentName);
+        symbolTable.enterClass(className, parentName, n.f1.f0.beginLine);
 
         n.f5.accept(this, null);
         n.f6.accept(this, null);
@@ -117,7 +122,7 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
         n.f4.accept(this, null);
         n.f7.accept(this, null);
         
-        symbolTable.exitMethod();
+        symbolTable.exitMethod(n.f2.f0.beginLine);
         return null;
     }
 
@@ -130,7 +135,7 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
     public String visit(FormalParameter n, Void argu){
         String type = n.f0.accept(this, null);
         String name = n.f1.accept(this, null);
-        symbolTable.insertParameter(name, type);
+        symbolTable.insertParameter(name, type, n.f1.f0.beginLine);
         return null;
     }
 
@@ -145,7 +150,7 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
         String name = n.f1.accept(this, null);
 
         // insert method can decides if the parameter is a local variable or a field based on the current scope
-        symbolTable.insert(name, type);
+        symbolTable.insert(name, type, n.f1.f0.beginLine);
         return null;
     }
 

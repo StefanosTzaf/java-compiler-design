@@ -47,9 +47,9 @@ public class GlobalSymbolTable {
     private int methodCounter = 0;
     
     // interface of the symbol table as reffered in the slides
-    public void enterClass(String className, String parentName) {
+    public void enterClass(String className, String parentName, int line) {
         if (classes.containsKey(className)) {
-            throw new RuntimeException("TYPE ERROR: Class " + className + " is already defined");
+            throw new RuntimeException("TYPE ERROR: Class " + className + " is already defined (line " + line + ")");
         }
 
         currentClass = new ClassSymbolTable(className, parentName);
@@ -64,7 +64,7 @@ public class GlobalSymbolTable {
 
             // if the parent class is not defined(even if it is defined later in the file)
             if(parent == null){
-                throw new RuntimeException("TYPE ERROR: Parent class " + parentName + " is not defined");
+                throw new RuntimeException("TYPE ERROR: Parent class " + parentName + " is not defined (line " + line + ")");
             }
 
             this.fieldCounter = parent.nextFieldOffset;
@@ -80,19 +80,19 @@ public class GlobalSymbolTable {
         currentMethod = new MethodSymbolTable(returnType, methodName);
     }
 
-    public void insert(String name, String type) {
+    public void insert(String name, String type, int line) {
         // if we are now inside a method, then this is a local variable
         if (currentMethod != null) {
             // in local variables we don't calculate offsets
             if (currentMethod.localVariables.containsKey(name) || currentMethod.parameters.containsKey(name)) {
-                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name);
+                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name + " (line " + line + ")");
             }
             currentMethod.localVariables.put(name, type);
         }
         // if we are not inside a method but we are inside a class, then this is a field
         else if (currentClass != null) {
             if (currentClass.fields.containsKey(name)) {
-                throw new RuntimeException("TYPE ERROR: Field " + name + " is already defined in class " + currentClass.name);
+                throw new RuntimeException("TYPE ERROR: Field " + name + " is already defined in class " + currentClass.name + " (line " + line + ")");
             }
             currentClass.fields.put(name, type);
             currentClass.fieldOffsets.put(name, fieldCounter);
@@ -112,16 +112,16 @@ public class GlobalSymbolTable {
         }
     }
 
-    public void insertParameter(String name, String type) {
+    public void insertParameter(String name, String type, int line) {
         if (currentMethod != null) {
             if (currentMethod.parameters.containsKey(name) || currentMethod.localVariables.containsKey(name)) {
-                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name);
+                throw new RuntimeException("TYPE ERROR: Variable " + name + " is already defined in method " + currentMethod.name + " (line " + line + ")");
             }
             currentMethod.parameters.put(name, type);
         }
     }
     
-    public void exitMethod() {
+    public void exitMethod(int line) {
         // we make a name this way so as to be distinguishable from other methods with the same name 
         // but different parameters (overloading)
         String nameWithParameters = currentMethod.name;
@@ -132,11 +132,16 @@ public class GlobalSymbolTable {
 
         // check this before adding the method to the symbol table because we have a map and it WON'T keep the same key two times 
         if (currentClass.methods.containsKey(nameWithParameters)) {
-            throw new RuntimeException("TYPE ERROR: Method " + currentMethod.name + " is already defined with identical parameters in class " + currentClass.name);
+            throw new RuntimeException("TYPE ERROR: Method " + currentMethod.name + " is already defined with identical parameters in class " + currentClass.name + " (line " + line + ")");
         }
         
         currentClass.methods.put(nameWithParameters, currentMethod);
-        checkOverrideAndOverload(currentClass.name, nameWithParameters);
+        // main method is static do not add it in the offsets, do not check for override and overload and do not increase the method counter
+        if (currentMethod.name.equals("main")) {
+            currentMethod = null;
+            return;
+        }
+        checkOverrideAndOverload(currentClass.name, nameWithParameters, line);
 
         Integer inheritedOffset = findMethodOffsetInHierarchy(currentClass.extendsFrom, nameWithParameters);
         if (inheritedOffset != null) {
@@ -295,7 +300,7 @@ public class GlobalSymbolTable {
     }
 
 
-    public void checkOverrideAndOverload(String className, String fullMethodName) {
+    public void checkOverrideAndOverload(String className, String fullMethodName, int line) {
         ClassSymbolTable classToCheck = classes.get(className);
         MethodSymbolTable methodToCheck = classToCheck.methods.get(fullMethodName);
         String nameWithoutParameters = methodToCheck.name;
@@ -347,20 +352,20 @@ public class GlobalSymbolTable {
                     if (isExactMatch) {
                         // exactly the same in the same class -> ERROR
                         if (className.equals(currentClassName)) {
-                            throw new RuntimeException("TYPE ERROR: Method " + nameWithoutParameters + " is already defined with identical arguments in class " + className);
+                            throw new RuntimeException("TYPE ERROR: Method " + nameWithoutParameters + " is already defined with identical arguments in class " + className + " (line " + line + ")");
                         } 
                         else {
                             // we have an override but we check the return type, if it is not the same -> ERROR
                             if (!methodToCheck.returnType.equals(currentMethod.returnType)) {
                                 throw new RuntimeException("TYPE ERROR: Method " + nameWithoutParameters + " in class " + className + 
-                                    " must have the same return type as the method it overrides in class " + currentClassName);
+                                    " must have the same return type as the method it overrides in class " + currentClassName + " (line " + line + ")");
                             }
                         }
                     }
                     else if (allHaveHierarchyRelationship) {
                         // all the arguments have a hierarchy relationship
                         throw new RuntimeException("TYPE ERROR: Ambiguous overloading for method " + nameWithoutParameters + " in class " + className + 
-                            ". All arguments have a subtype/supertype relationship with a method in class " + currentClassName);
+                            ". All arguments have a subtype/supertype relationship with a method in class " + currentClassName + " (line " + line + ")");
                     }
                 }
             }

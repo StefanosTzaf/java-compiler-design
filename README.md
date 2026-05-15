@@ -20,3 +20,6 @@ After the first implementation i realised that the offsets were computed correct
 For the fields, i just added a field in the `ClassSymbolTable` class that keeps the next field offset, so we don't have to traverse the parent class every time we want to compute the offset of a parent in a derived class. When exiting the scope, i save the offset of the final field of this class to the `nextFieldOffset` field, so when we enter a derived class we can just start counting the offsets from there. 
 
 ## Second Custom Visitor
+
+
+Added line to the error reporting. Most of the times works well and says the exact line of the error, and is really helpfull in big files for example in TreeVisitor-error.java

@@ -14,8 +14,8 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         this.currentMethodName = null;
     }
 
-    private void throwError(String msg) {
-        throw new RuntimeException(msg);
+    private void throwError(String msg, int line) {
+        throw new RuntimeException(msg + " (line " + line + ")");
     }
 
     // ------------------------------- DECLARATIONS -------------------------------
@@ -121,7 +121,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
 
         // checks if the real return type is a subtype of the expected return type
         if (!symTable.isSubtype(actualReturnType, returnedType)) {
-            throwError("TYPE ERROR: Method " + currentMethodName + " expects " + returnedType + " but returns " + actualReturnType);
+            throwError("TYPE ERROR: Method " + currentMethodName + " expects " + returnedType + " but returns " + actualReturnType, n.f2.f0.beginLine);
         }
 
         currentMethodName = null;
@@ -138,7 +138,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String varType = n.f0.accept(this, argu);
         if(!varType.equals("int") && !varType.equals("boolean") && !varType.equals("int[]")) {
             if (!symTable.containClass(varType)){
-                throwError("TYPE ERROR: Unknown class type: " + varType);
+                throwError("TYPE ERROR: Unknown class type: " + varType, n.f1.f0.beginLine);
             }
         }
         return null;
@@ -155,11 +155,11 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(AndExpression n, String argu) {
         String leftType = n.f0.accept(this, argu);
         if (!leftType.equals("boolean")){
-            throwError("TYPE ERROR: Operator && requires boolean operands, <" + leftType + "> was given as left operand");
+            throwError("TYPE ERROR: Operator && requires boolean operands, <" + leftType + "> was given as left operand", n.f1.beginLine);
         }
         String rightType = n.f2.accept(this, argu);
         if (!rightType.equals("boolean")){
-            throwError("TYPE ERROR: Operator && requires boolean operands, <" + rightType + "> was given as right operand");
+            throwError("TYPE ERROR: Operator && requires boolean operands, <" + rightType + "> was given as right operand", n.f1.beginLine);
         }
         return "boolean";
     }
@@ -173,11 +173,11 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(CompareExpression n, String argu) {
         String leftType = n.f0.accept(this, argu);
         if (!leftType.equals("int")){
-            throwError("TYPE ERROR: Operator < requires int operands, <" + leftType + "> was given as left operand");
+            throwError("TYPE ERROR: Operator < requires int operands, <" + leftType + "> was given as left operand", n.f1.beginLine);
         }
         String rightType = n.f2.accept(this, argu);
         if (!rightType.equals("int")){
-            throwError("TYPE ERROR: Operator < requires int operands, <" + rightType + "> was given as right operand");
+            throwError("TYPE ERROR: Operator < requires int operands, <" + rightType + "> was given as right operand", n.f1.beginLine);
         }
         return "boolean";
     }
@@ -192,10 +192,10 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String leftType = n.f0.accept(this, argu);
         String rightType = n.f2.accept(this, argu);
         if (!leftType.equals("int")){
-            throwError("TYPE ERROR: Operator + requires int operands, <" + leftType + "> was given as left operand");
+            throwError("TYPE ERROR: Operator + requires int operands, <" + leftType + "> was given as left operand", n.f1.beginLine);
         }
         if (!rightType.equals("int")){
-            throwError("TYPE ERROR: Operator + requires int operands, <" + rightType + "> was given as right operand");
+            throwError("TYPE ERROR: Operator + requires int operands, <" + rightType + "> was given as right operand", n.f1.beginLine);
         }
         return "int";
     }
@@ -210,10 +210,10 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String leftType = n.f0.accept(this, argu);
         String rightType = n.f2.accept(this, argu);
         if (!leftType.equals("int")){
-            throwError("TYPE ERROR: Operator - requires int operands, <" + leftType + "> was given as left operand");
+            throwError("TYPE ERROR: Operator - requires int operands, <" + leftType + "> was given as left operand", n.f1.beginLine);
         }
         if (!rightType.equals("int")){
-            throwError("TYPE ERROR: Operator - requires int operands, <" + rightType + "> was given as right operand");
+            throwError("TYPE ERROR: Operator - requires int operands, <" + rightType + "> was given as right operand", n.f1.beginLine);
         }
         return "int";
     }
@@ -228,10 +228,10 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String leftType = n.f0.accept(this, argu);
         String rightType = n.f2.accept(this, argu);
         if (!leftType.equals("int")){
-            throwError("TYPE ERROR: Operator * requires int operands, <" + leftType + "> was given as left operand");
+            throwError("TYPE ERROR: Operator * requires int operands, <" + leftType + "> was given as left operand", n.f1.beginLine);
         }
         if (!rightType.equals("int")){
-            throwError("TYPE ERROR: Operator * requires int operands, <" + rightType + "> was given as right operand");
+            throwError("TYPE ERROR: Operator * requires int operands, <" + rightType + "> was given as right operand", n.f1.beginLine);
         }
         return "int";
     }
@@ -247,10 +247,10 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String arrayType = n.f0.accept(this, argu);
         String indexType = n.f2.accept(this, argu);
         if (!arrayType.equals("int[]")) {
-            throwError("TYPE ERROR: ArrayLookup into non-array type, <" + arrayType + "> was given");
+            throwError("TYPE ERROR: ArrayLookup into non-array type, <" + arrayType + "> was given", n.f1.beginLine);
         }
         if (!indexType.equals("int")) {
-            throwError("TYPE ERROR: Index of array must be of type int, <" + indexType + "> was given");
+            throwError("TYPE ERROR: Index of array must be of type int, <" + indexType + "> was given", n.f1.beginLine);
         }
         return "int";
     }
@@ -264,7 +264,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(ArrayLength n, String argu) {
         String arrayType = n.f0.accept(this, argu);
         if (!arrayType.equals("int[]")) {
-            throwError("TYPE ERROR: ArrayLength can only be applied to int arrays, <" + arrayType + "> was given");
+            throwError("TYPE ERROR: ArrayLength can only be applied to int arrays, <" + arrayType + "> was given", n.f1.beginLine);
         }
         return "int";
     }
@@ -279,7 +279,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(AllocationExpression n, String argu) {
         String className = n.f1.accept(this, null);
         if (!symTable.containClass(className)) {
-            throwError("TYPE ERROR: Unknown class type: " + className);
+            throwError("TYPE ERROR: Unknown class type: " + className, n.f0.beginLine);
         }
         return className;
     }
@@ -295,7 +295,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(ArrayAllocationExpression n, String argu) {
         String sizeType = n.f3.accept(this, "EXPRESSION");
         if (!sizeType.equals("int")) {
-            throwError("Size of array must be an int, <" + sizeType + "> was given");
+            throwError("TYPE ERROR: Size of array must be an int, <" + sizeType + "> was given", n.f0.beginLine);
         }
         return "int[]";
     }
@@ -308,7 +308,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(NotExpression n, String argu) {
         String clauseType = n.f1.accept(this, argu);
         if (!clauseType.equals("boolean")){
-           throwError("TYPE ERROR: Not expression can only be applied to boolean, <" + clauseType + "> was given");
+           throwError("TYPE ERROR: Not expression can only be applied to boolean, <" + clauseType + "> was given", n.f0.beginLine);
         }
         return "boolean";
     }
@@ -337,7 +337,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String objectType = n.f0.accept(this, "EXPRESSION");
         String methodName = n.f2.accept(this, null);
         if (objectType.equals("int") || objectType.equals("boolean") || objectType.equals("int[]")) {
-            throwError("TYPE ERROR: Cannot call method " + methodName + " on basic type " + objectType);
+            throwError("TYPE ERROR: Cannot call method " + methodName + " on basic type " + objectType, n.f2.f0.beginLine);
         }
 
         Vector<String> argumentTypes = new Vector<>();
@@ -350,7 +350,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
 
         String returnType = symTable.getMethodReturnType(objectType, methodName, argumentTypes);
         if (returnType == null) {
-            throwError("TYPE ERROR: Method " + methodName + " with given argument types not found in class " + objectType);
+            throwError("TYPE ERROR: Method " + methodName + " with given argument types not found in class " + objectType, n.f2.f0.beginLine);
         }
         return returnType;
     }
@@ -420,7 +420,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     @Override
     public String visit(ThisExpression n, String argu) {
         if (currentClassName == null) {
-            throwError("TYPE ERROR: <This> used outside of a class");
+            throwError("TYPE ERROR: <This> used outside of a class", n.f0.beginLine);
         }
         return currentClassName;
     }
@@ -436,7 +436,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         if (argu != null && argu.toString().equals("EXPRESSION")) {
             String type = symTable.getVarType(currentClassName, currentMethodName, idName);
             if (type == null) {
-                throwError("TYPE ERROR: Variable " + idName + " not found in current scope");
+                throwError("TYPE ERROR: Variable " + idName + " not found in current scope", n.f0.beginLine);
             }
             return type;
         }
@@ -473,7 +473,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String rightType= n.f2.accept(this, "EXPRESSION"); 
 
         if (!symTable.isSubtype(rightType, leftType)) {
-            throwError("TYPE ERROR: " + rightType + " cannot be assigned to " + leftType);
+            throwError("TYPE ERROR: " + rightType + " cannot be assigned to " + leftType, n.f1.beginLine);
         }
         return null;
     }
@@ -494,13 +494,13 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String rightType = n.f5.accept(this, "EXPRESSION");
 
         if (!arrayType.equals("int[]")) {
-            throwError("TYPE ERROR: Left side of array assignment must be of type int[], <" + arrayType + "> was given");
+            throwError("TYPE ERROR: Left side of array assignment must be of type int[], <" + arrayType + "> was given", n.f0.f0.beginLine);
         }
         if (!indexType.equals("int")) {
-            throwError("TYPE ERROR: Index of array assignment must be of type int, <" + indexType + "> was given");
+            throwError("TYPE ERROR: Index of array assignment must be of type int, <" + indexType + "> was given", n.f1.beginLine);
         }
         if (!rightType.equals("int")) {
-            throwError("TYPE ERROR: Right side of array assignment must be of type int, <" + rightType + "> was given");
+            throwError("TYPE ERROR: Right side of array assignment must be of type int, <" + rightType + "> was given", n.f4.beginLine);
         }
         return null;
     }
@@ -518,7 +518,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(IfStatement n, String argu) {
         String conditionType = n.f2.accept(this, "EXPRESSION");
         if (!conditionType.equals("boolean")){
-            throwError("TYPE ERROR: Condition of if statement must be boolean, <" + conditionType + "> was given");
+            throwError("TYPE ERROR: Condition of if statement must be boolean, <" + conditionType + "> was given", n.f0.beginLine);
         }
         n.f4.accept(this, "EXPRESSION");
         n.f6.accept(this, "EXPRESSION");
@@ -536,7 +536,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
     public String visit(WhileStatement n, String argu) {
         String conditionType = n.f2.accept(this, "EXPRESSION");
         if (!conditionType.equals("boolean")){
-            throwError("TYPE ERROR: Condition of while statement must be boolean, <" + conditionType + "> was given");
+            throwError("TYPE ERROR: Condition of while statement must be boolean, <" + conditionType + "> was given", n.f0.beginLine);
         }
         n.f4.accept(this, argu);
         return null;
@@ -555,7 +555,7 @@ public class TypeCheckVisitor extends GJDepthFirst<String, String> {
         String exprType = n.f2.accept(this, "EXPRESSION");
         // as said in piazza, printing only int
         if (!exprType.equals("int")){
-            throwError("TYPE ERROR: Print statement can only print int, <" + exprType + "> was given");
+            throwError("TYPE ERROR: Print statement can only print int, <" + exprType + "> was given", n.f0.beginLine);
         }
         return null;
     }

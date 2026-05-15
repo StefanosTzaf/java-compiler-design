@@ -6,54 +6,59 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        if(args.length != 1){
-            System.err.println("Usage: java Main <inputFile>");
+        if(args.length == 0){
+            System.err.println("Usage: java Main <inputFile1> <inputFile2> ...");
             System.exit(1);
         }
 
-        FileInputStream fis = null;
-        try{
-            fis = new FileInputStream(args[0]);
-            MiniJavaParser parser = new MiniJavaParser(fis);
-
-            Goal root = parser.Goal();
-
-            SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor();
-            root.accept(symbolTableVisitor, null);
-
-            TypeCheckVisitor typeCheckVisitor = new TypeCheckVisitor(symbolTableVisitor.symbolTable);
-            root.accept(typeCheckVisitor, null);
-            // printing the symbol table for debugging
-            for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
-                String name = c.name;
-                if (name.equals(symbolTableVisitor.mainClassName)) {
-                    continue;
-                }
-                // iterating over the fieldOffsets Map and NOT the fields Map because
-                // the overriden methods have not been added in the methodOffsets Map(we don't want to print them)
-                for (Map.Entry<String, Integer> entry : c.fieldOffsets.entrySet()) {
-                    System.out.println(name + "." + entry.getKey() + " : " + entry.getValue());
-                }
-                for (Map.Entry<String, Integer> entry : c.methodOffsets.entrySet()) {
-                    System.out.println(name + "." + entry.getKey() + " : " + entry.getValue());
-                }
-            }
-        }
-        catch(ParseException ex){
-            System.out.println(ex.getMessage());
-        }
-        catch(FileNotFoundException ex){
-            System.err.println(ex.getMessage());
-        }
-        catch(RuntimeException ex){
-            System.err.println(ex.getMessage()); 
-        }
-        finally{
+        for (String filename : args) {
+            FileInputStream fis = null;
             try{
-                if(fis != null) fis.close();
+                fis = new FileInputStream(filename);
+                MiniJavaParser parser = new MiniJavaParser(fis);
+                Goal root = parser.Goal();
+
+                SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor();
+                root.accept(symbolTableVisitor, null);
+
+                TypeCheckVisitor typeCheckVisitor = new TypeCheckVisitor(symbolTableVisitor.symbolTable);
+                root.accept(typeCheckVisitor, null);
+
+                // printing the offsets
+                for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
+                    String name = c.name;
+                    if (name.equals(symbolTableVisitor.mainClassName)) {
+                        continue;
+                    }  
+                    for (Map.Entry<String, Integer> entry : c.fieldOffsets.entrySet()) {
+                        System.out.println(name + "." + entry.getKey() + " : " + entry.getValue());
+                    }
+                    
+                    for (Map.Entry<String, Integer> entry : c.methodOffsets.entrySet()) {
+                        // real name?
+                        String mangledName = entry.getKey();
+                        String realName = c.methods.get(mangledName).name; 
+                        
+                        System.out.println(name + "." + realName + " : " + entry.getValue());
+                    }
+                }
             }
-            catch(IOException ex){
-                System.err.println(ex.getMessage());
+            catch(ParseException ex){
+                System.out.println("PARSE ERROR: " + ex.getMessage());
+            }
+            catch(FileNotFoundException ex){
+                System.err.println("File not found: " + ex.getMessage());
+            }
+            catch(RuntimeException ex){
+                System.err.println(ex.getMessage()); 
+            }
+            finally{
+                try{
+                    if(fis != null) fis.close();
+                }
+                catch(IOException ex){
+                    System.err.println(ex.getMessage());
+                }
             }
         }
     }
