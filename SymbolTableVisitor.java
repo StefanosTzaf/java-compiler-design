@@ -35,7 +35,8 @@ public class SymbolTableVisitor extends GJDepthFirst<String, Void> {
         symbolTable.enterClass(className, null, n.f1.f0.beginLine);
         mainClassName = className;
 
-        // main has no methods is static but we put it in the symbol table for later checks
+        // main has no methods is static but we put it in the symbol 
+        // table for later checks (insert function will not actually add it )
         symbolTable.enterMethod("void", "main");
         String argName = n.f11.accept(this, null);
         // pass the line of the parameter of the main method

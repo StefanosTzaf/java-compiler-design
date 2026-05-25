@@ -8,6 +8,7 @@
 !*.jj
 !Makefile
 !*.txt
+!*.sh
 
 minijava-examples-new/
 minijava_example/

@@ -1,0 +1,5 @@
+-----------Class A-----------
+--Variables---
+---Methods---
+A.foo : 0
+A.foo : 8

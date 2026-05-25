@@ -313,7 +313,7 @@ public class GlobalSymbolTable {
 
             for (MethodSymbolTable currentMethod : currentClass.methods.values()) {
                 
-                // if the name without the parameters(foo not the foo_int_int) is the same
+                // if the name without the parameters(for example foo, not the foo_int_int) is the same
                 if (currentMethod.name.equals(nameWithoutParameters)) {
                     // if it exactly the same method, skip
                     if (currentMethod == methodToCheck){

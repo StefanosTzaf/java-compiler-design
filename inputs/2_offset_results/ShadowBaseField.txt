@@ -6,6 +6,6 @@ A.getX : 0
 
 -----------Class B-----------
 --Variables---
-Β.x : 4
+B.x : 4
 ---Methods---
 
