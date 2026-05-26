@@ -26,7 +26,7 @@ for file in "$PASS_DIR"/*; do
         continue
     fi
 
-    actual_output=$($EXEC_CMD "$file")
+    actual_output=$($EXEC_CMD "$file" |grep -v '^-' | awk 'NF')
     
     # grep -v removes lines starting with '-' 
     # awk 'NF' removes empty lines
@@ -58,7 +58,7 @@ for file in "$PASS_DIR"/*; do
         continue
     fi
 
-    actual_output=$($EXEC_CMD "$file")
+    actual_output=$($EXEC_CMD "$file" | grep -v '^-' | awk 'NF')
     
     # grep -v removes lines starting with '-' 
     # awk 'NF' removes empty lines
@@ -79,7 +79,7 @@ echo -e ""
 
 for file in "$ERR_DIR"/*.java; do
     filename=$(basename "$file")
-    actual_output=$($EXEC_CMD "$file" 2>&1)
+    actual_output=$($EXEC_CMD "$file" 2>&1 | grep -v '^-' | awk 'NF')
     exit_status=$?
     if echo "$actual_output" | grep -q "TYPE ERROR"; then
         echo -e "${GREEN}[PASS]${NC} $filename (Caught TYPE ERROR)"

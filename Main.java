@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import syntaxtree.*;
 import java.util.*;
+import java.io.File;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -24,6 +25,9 @@ public class Main {
                 TypeCheckVisitor typeCheckVisitor = new TypeCheckVisitor(symbolTableVisitor.symbolTable);
                 root.accept(typeCheckVisitor, null);
 
+                // do it this way to avoid printing the file path, just the file name
+                String nameFile = new File(filename).getName();
+                System.out.println("-----File : " + nameFile + " ------");
                 // printing the offsets
                 for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
                     String name = c.name;
@@ -42,6 +46,7 @@ public class Main {
                         System.out.println(name + "." + realName + " : " + entry.getValue());
                     }
                 }
+                System.out.println();
             }
             catch(ParseException ex){
                 System.out.println("PARSE ERROR: " + ex.getMessage());
