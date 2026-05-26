@@ -20,7 +20,7 @@ This visitor just makes the symbol table and is not doing any checking (except f
 After the first implementation i realised that the offsets were computed correctly for the fields and methods in base classes but for the derived classes the offsets were not. 
 So as to solve this, i just added a field in the `ClassSymbolTable` class that keeps the next field offset, so we don't have to traverse the parent class every time we want to compute the offset of a parent in a derived class. When exiting the scope, i save the offset of the final field of this class to the `nextFieldOffset` field, so when we enter a derived class we can just start counting the offsets from there. Finally, I handle the main method specially: I add it to the symbol table to allow type checking of its local variables, but I skip it during the offset computation and override/overload checks since it is static.
 
-## Second Custom Visitor
+## Second Custom Visitor (TypeCheckVisitor)
 
 This visitor has access to the ready symbol table and is used to do the checking. The general idea is to enter the class or the method (depending on the context) and the accept the children (accept does visit(this)) and then exit the scope. In some cases we pass string "EXPRESSION" to idinify the ```context``` of the identifier. For example if we are visiting an identifier that is part of an expression we return its type, else just pass its name. This is useful for example when we are visiting a while statement and we want to check the type of the condition (just calling accept to this child).
 Ι αdded line to the error reporting. Most of the times works well and says the exact line of the error, and is really helpfull in big files for example in TreeVisitor-error.java.
@@ -29,7 +29,7 @@ This visitor has access to the ready symbol table and is used to do the checking
 
 There is also a script `test.sh` that runs the tests for 2 folders that have tests for valid input to check offsets and another folder that has tests for invalid input to check the errors. It does not print the output of the valid tests, just compares it with the expected output. If you want to see the output of the valid tests or the specific error messages (and the line), you can just run the command `java Main test/inputs/1_examples_passing_type_checking/BinaryTree.java` for example. There is also a Makefile that runs the JTB, JavaCC and then then compile my files. For cleaning the produced java files and class files there is the command `make clean`.
 
-## Disclaimer for the offset prining
+## Disclaimer for the offset printing
 
 In the begginning i was printing the offsets with the format name_type1_type2... , in the way that are saved as keys in the symbol table.
 However, so as to automate the testing, i changed the format to name : offset just as in the instructions (two methods foo(int x) and foo(boolean y) will be printed as foo : 0 and foo : 4 for example).
