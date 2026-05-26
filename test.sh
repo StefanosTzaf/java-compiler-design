@@ -1,5 +1,5 @@
 #!/bin/bash
-
+make
 EXEC_CMD="java Main" 
 
 PASS_DIR="inputs/1_examples_passing_type_checking"

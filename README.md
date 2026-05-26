@@ -1,4 +1,4 @@
-# Project 2: MiniJava Static Checking (Semantic Analysis)
+# Project 2: MiniJava Type Checking (Semantic Analysis)
 
 ## Symbol Table Structure and Implementation
 

@@ -15,6 +15,10 @@ public class Main {
         for (String filename : args) {
             FileInputStream fis = null;
             try{
+                // do it this way to avoid printing the file path, just the file name
+                String nameFile = new File(filename).getName();
+                System.out.println("-----File : " + nameFile + " ------");
+
                 fis = new FileInputStream(filename);
                 MiniJavaParser parser = new MiniJavaParser(fis);
                 Goal root = parser.Goal();
@@ -25,9 +29,6 @@ public class Main {
                 TypeCheckVisitor typeCheckVisitor = new TypeCheckVisitor(symbolTableVisitor.symbolTable);
                 root.accept(typeCheckVisitor, null);
 
-                // do it this way to avoid printing the file path, just the file name
-                String nameFile = new File(filename).getName();
-                System.out.println("-----File : " + nameFile + " ------");
                 // printing the offsets
                 for (ClassSymbolTable c : symbolTableVisitor.symbolTable.classes.values()) {
                     String name = c.name;
@@ -55,7 +56,7 @@ public class Main {
                 System.err.println("File not found: " + ex.getMessage());
             }
             catch(RuntimeException ex){
-                System.err.println(ex.getMessage()); 
+                System.err.println(ex.getMessage()+ "\n"); 
             }
             finally{
                 try{
