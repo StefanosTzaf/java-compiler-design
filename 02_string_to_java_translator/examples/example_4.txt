@@ -1,0 +1,22 @@
+x(){
+    "X" + y(if ("x" prefix "y") "WHAT" else y("x") )
+}
+
+y(x){
+    z(x)
+}
+
+z(x){
+    "finally"
+}
+
+precedence_concat(){
+    if("a" + "b" prefix "a" + "b")
+        "right precedence"
+    else
+        "wrong" + "precedence"
+    
+}
+
+if("finally" suffix x()) "yes" else "no"
+precedence_concat()

@@ -7,6 +7,7 @@
 !README.md
 !*.jar
 !*.cup
+!*.txt
 !*.flex
 !*.sh
 !Makefile
