@@ -1,0 +1,14 @@
+precedence_test() {
+    "Result: " + if ("a" prefix "abc") "Yes" else "No" + "!"
+}
+
+recursive_call(s) {
+    if (s suffix "A!!!")
+        "end"
+    else
+        recursive_call(s + "!")
+}
+
+
+precedence_test()
+recursive_call("A")
